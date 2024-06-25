@@ -1,0 +1,252 @@
+{
+	"info": {
+		"_postman_id": "9326d417-e1e4-446b-84c5-82edb91171c4",
+		"name": "Workflow API",
+		"description": "API para gerenciar solicitações de viagem e tarefas no Camunda BPM.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1901432",
+		"_collection_link": "https://fiap-software-architecture.postman.co/workspace/Team-Workspace~4b11a6a4-188f-437e-8427-3986538a117b/collection/1901432-9326d417-e1e4-446b-84c5-82edb91171c4?action=share&source=collection_link&creator=1901432"
+	},
+	"item": [
+		{
+			"name": "solicitaçao de viagem",
+			"item": [
+				{
+					"name": "Criar Solicitação de Viagem",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": 1234567,\n\t\"departamento\": \"Vendas\",\n\t\"origem\": \"São Paulo\",\n\t\"destino\": \"Rio de Janeiro\",\n\t\"dataInicio\": \"2024-06-01\",\n\t\"dataFim\": \"2024-06-03\",\n\t\"valorAdiantamento\": 210,\n\t\"valorTotal\": 12500,\n\t\"emailSolicitante\": \"solicitante@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/travel-requests-process",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"travel-requests-process"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "tarefas",
+			"item": [
+				{
+					"name": "Listar Todas as Tarefas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/tasks",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Completar Tarefa",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"approvalStatus\": \"approved\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/tasks/e8aac3a9-164e-11ef-abd7-0242ac1b0003/complete",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"e8aac3a9-164e-11ef-abd7-0242ac1b0003",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "instancias",
+			"item": [
+				{
+					"name": "Listar Todas as Instâncias de Processos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/camunda-processes",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"camunda-processes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Detalhes de Uma Instância de Processo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/camunda-processes/{{processInstanceId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"camunda-processes",
+								"{{processInstanceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar um processo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/camunda-processes/44a6d908-1629-11ef-8e31-7ee7b40765b8/cancel",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"camunda-processes",
+								"44a6d908-1629-11ef-8e31-7ee7b40765b8",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actuator",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/actuator",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"actuator"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "quotation",
+			"item": [
+				{
+					"name": "Listar todas as requisiçoes de viagens",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host-quotation}}/api/travel-requests",
+							"host": [
+								"{{host-quotation}}"
+							],
+							"path": [
+								"api",
+								"travel-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actuator",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host-quotation}}/actuator",
+							"host": [
+								"{{host-quotation}}"
+							],
+							"path": [
+								"actuator"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "localhost:8081"
+		},
+		{
+			"key": "processInstanceId",
+			"value": "processInstanceId"
+		},
+		{
+			"key": "host-quotation",
+			"value": "localhost:8085/api/travel-requests",
+			"type": "string"
+		}
+	]
+}

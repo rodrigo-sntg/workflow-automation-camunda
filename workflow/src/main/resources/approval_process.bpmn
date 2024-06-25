@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0z52v5v" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.23.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.21.0">
+  <bpmn:process id="Process_Travel_Approval" name="Processo Solicitação de Viagem" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="StartEvent_Solicitacao" name="Solicitação de Viagem">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="departamento" label="Departamento" type="string" defaultValue="Marketing" />
+          <camunda:formField id="valorAdiantamento" label="Valor do Adiantamento" type="long" defaultValue="400" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_AutoApprovalCheck</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_AutoApprovalCheck" name="Verifica Aprovação Automática" default="Flow_ManualApproval">
+      <bpmn:incoming>Flow_AutoApprovalCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutoApprove</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ManualApproval</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_AutoApprove" name="Aprovação Automática" camunda:class="com.ntconsult.workflow.services.taskservice.AutoApprovalService">
+      <bpmn:incoming>Flow_AutoApprove</bpmn:incoming>
+      <bpmn:outgoing>Flow_CreateQuotation</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_ManualApproval" name="Aprovação Manual">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="approvalStatus" label="Resultado da Aprovação" type="enum">
+            <camunda:value id="needsAdjustment" name="Necessita Ajustes" />
+            <camunda:value id="approved" name="Aprovado" />
+            <camunda:value id="rejected" name="Rejeitado" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ManualApproval</bpmn:incoming>
+      <bpmn:incoming>Flow_15seu3m</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManualApprovalResult</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ManualApprovalResult" name="Resultado da Aprovação Manual">
+      <bpmn:incoming>Flow_ManualApprovalResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rejected</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AdjustmentsNeeded</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_Rejected" name="Fim - Rejeitado">
+      <bpmn:incoming>Flow_16xup79</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_AdjustmentsNeeded" name="Realizar Ajustes">
+      <bpmn:incoming>Flow_AdjustmentsNeeded</bpmn:incoming>
+      <bpmn:outgoing>Flow_15seu3m</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_CreateQuotation" name="Criar Cotação" camunda:class="com.ntconsult.workflow.services.taskservice.CreateQuotationService">
+      <bpmn:incoming>Flow_1kc8kf4</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndProcess</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_Approved" name="Fim - Aprovado">
+      <bpmn:incoming>Flow_EndProcess</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:intermediateCatchEvent id="IntermediateCatchEvent_Cancel" name="Cancelar Solicitação">
+      <bpmn:outgoing>Flow_EndCancel</bpmn:outgoing>
+      <bpmn:signalEventDefinition signalRef="Signal_3e4tbrv" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="EndEvent_Cancel" name="Fim - Cancelado">
+      <bpmn:incoming>Flow_1kwcdw5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_AutoApprovalCheck" sourceRef="StartEvent_Solicitacao" targetRef="Gateway_AutoApprovalCheck" />
+    <bpmn:sequenceFlow id="Flow_AutoApprove" name="Aprovação Automática" sourceRef="Gateway_AutoApprovalCheck" targetRef="Task_AutoApprove">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${departamento == "Vendas" &amp;&amp; valorAdiantamento &lt;= 1000 || departamento == "Marketing" &amp;&amp; valorAdiantamento &lt;= 500}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ManualApproval" name="Aprovação Manual" sourceRef="Gateway_AutoApprovalCheck" targetRef="Task_ManualApproval" />
+    <bpmn:sequenceFlow id="Flow_CreateQuotation" sourceRef="Task_AutoApprove" targetRef="Task_ApprovedNotification" />
+    <bpmn:sequenceFlow id="Flow_15seu3m" sourceRef="Task_AdjustmentsNeeded" targetRef="Task_ManualApproval" />
+    <bpmn:sequenceFlow id="Flow_ManualApprovalResult" sourceRef="Task_ManualApproval" targetRef="Gateway_ManualApprovalResult" />
+    <bpmn:sequenceFlow id="Flow_Rejected" name="Rejeitado" sourceRef="Gateway_ManualApprovalResult" targetRef="Task_RepprovedNotification">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalStatus == "rejected"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Approved" name="Aprovado" sourceRef="Gateway_ManualApprovalResult" targetRef="Task_ApprovedNotification">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalStatus == "approved"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AdjustmentsNeeded" name="Ajustes Necessários" sourceRef="Gateway_ManualApprovalResult" targetRef="Task_AdjustmentsNeeded">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalStatus == "needsAdjustment"} </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_16xup79" sourceRef="Task_RepprovedNotification" targetRef="EndEvent_Rejected" />
+    <bpmn:sequenceFlow id="Flow_1kc8kf4" sourceRef="Task_ApprovedNotification" targetRef="Task_CreateQuotation" />
+    <bpmn:sequenceFlow id="Flow_EndProcess" sourceRef="Task_CreateQuotation" targetRef="EndEvent_Approved" />
+    <bpmn:sequenceFlow id="Flow_TimeoutNotification" sourceRef="BoundaryEvent_Timeout" targetRef="Task_TimeoutNotification" />
+    <bpmn:sequenceFlow id="Flow_EndCancel" sourceRef="IntermediateCatchEvent_Cancel" targetRef="Task_CancelationNotification" />
+    <bpmn:sequenceFlow id="Flow_1kwcdw5" sourceRef="Task_CancelationNotification" targetRef="EndEvent_Cancel" />
+    <bpmn:boundaryEvent id="BoundaryEvent_Timeout" name="Notificação de Atraso" cancelActivity="false" attachedToRef="Task_ManualApproval">
+      <bpmn:outgoing>Flow_TimeoutNotification</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_15lpipb">
+        <bpmn:timeDuration>PT1S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Event_05rciej" attachedToRef="Task_ManualApproval">
+      <bpmn:outgoing>Flow_1w5kw4t</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_1iurkcd" signalRef="Signal_3e4tbrv" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1w5kw4t" sourceRef="Event_05rciej" targetRef="Task_CancelationNotification" />
+    <bpmn:boundaryEvent id="Event_0iw40b1" attachedToRef="Task_AdjustmentsNeeded">
+      <bpmn:outgoing>Flow_1lfzd2l</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_0qti7yo" signalRef="Signal_3e4tbrv" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1lfzd2l" sourceRef="Event_0iw40b1" targetRef="Task_CancelationNotification" />
+    <bpmn:sendTask id="Task_TimeoutNotification" name="Enviar Notificação de Atraso" camunda:class="com.ntconsult.workflow.services.notifications.TimeoutNotificationService">
+      <bpmn:incoming>Flow_TimeoutNotification</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="Task_ApprovedNotification" name="Enviar Notificação de Aprovação" camunda:class="com.ntconsult.workflow.services.notifications.ApprovedNotificationService">
+      <bpmn:incoming>Flow_CreateQuotation</bpmn:incoming>
+      <bpmn:incoming>Flow_Approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_1kc8kf4</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="Task_RepprovedNotification" name="Enviar Notificação de Reprovação" camunda:class="com.ntconsult.workflow.services.notifications.RejectedNotificationService">
+      <bpmn:incoming>Flow_Rejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_16xup79</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="Task_CancelationNotification" name="Enviar Notificação de Cancelamento" camunda:class="com.ntconsult.workflow.services.notifications.CancelationNotificationService">
+      <bpmn:incoming>Flow_EndCancel</bpmn:incoming>
+      <bpmn:incoming>Flow_1w5kw4t</bpmn:incoming>
+      <bpmn:incoming>Flow_1lfzd2l</bpmn:incoming>
+      <bpmn:outgoing>Flow_1kwcdw5</bpmn:outgoing>
+    </bpmn:sendTask>
+  </bpmn:process>
+  <bpmn:signal id="Signal_3e4tbrv" name="cancelSignal" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_Travel_Approval">
+      <bpmndi:BPMNShape id="BPMNShape_0q9aoz9" bpmnElement="StartEvent_Solicitacao">
+        <dc:Bounds x="172" y="292" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="156" y="328" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1fwdup8" bpmnElement="Gateway_AutoApprovalCheck" isMarkerVisible="true">
+        <dc:Bounds x="359" y="285" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="409" y="302" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1q1nomp" bpmnElement="Task_AutoApprove">
+        <dc:Bounds x="334" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1au70kq" bpmnElement="Task_ManualApproval">
+        <dc:Bounds x="334" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_14xdq67" bpmnElement="Gateway_ManualApprovalResult" isMarkerVisible="true">
+        <dc:Bounds x="575" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="526" y="450" width="66" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0200c78" bpmnElement="EndEvent_Rejected">
+        <dc:Bounds x="702" y="602" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="683" y="638" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0dyr983" bpmnElement="Task_AdjustmentsNeeded">
+        <dc:Bounds x="790" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0m81zo6" bpmnElement="Task_CreateQuotation">
+        <dc:Bounds x="550" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1n7tzr5" bpmnElement="EndEvent_Approved">
+        <dc:Bounds x="762" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="743" y="138" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_00qg3oz" bpmnElement="IntermediateCatchEvent_Cancel">
+        <dc:Bounds x="1072" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1063" y="428" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_11honux" bpmnElement="EndEvent_Cancel">
+        <dc:Bounds x="1332" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1310" y="428" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0taxsc6_di" bpmnElement="Task_TimeoutNotification">
+        <dc:Bounds x="330" y="680" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1g47wky_di" bpmnElement="Task_ApprovedNotification">
+        <dc:Bounds x="550" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1d6jg4b_di" bpmnElement="Task_RepprovedNotification">
+        <dc:Bounds x="550" y="580" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1vx9zo8_di" bpmnElement="Task_CancelationNotification">
+        <dc:Bounds x="1170" y="370" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1dqe3t5" bpmnElement="Event_0iw40b1">
+        <dc:Bounds x="872" y="522" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0x3tv77_di" bpmnElement="Event_05rciej">
+        <dc:Bounds x="416" y="522" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hr9vhg_di" bpmnElement="BoundaryEvent_Timeout">
+        <dc:Bounds x="362" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="606" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_0607oxj" bpmnElement="Flow_AutoApprovalCheck">
+        <di:waypoint x="208" y="310" />
+        <di:waypoint x="359" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0kehi18" bpmnElement="Flow_AutoApprove">
+        <di:waypoint x="384" y="285" />
+        <di:waypoint x="384" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="322" y="209" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_005vm5i" bpmnElement="Flow_ManualApproval">
+        <di:waypoint x="384" y="335" />
+        <di:waypoint x="384" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="323" y="406" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0gic5qe" bpmnElement="Flow_CreateQuotation">
+        <di:waypoint x="434" y="120" />
+        <di:waypoint x="492" y="120" />
+        <di:waypoint x="492" y="310" />
+        <di:waypoint x="550" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_1kxttxh" bpmnElement="Flow_15seu3m">
+        <di:waypoint x="840" y="540" />
+        <di:waypoint x="840" y="810" />
+        <di:waypoint x="250" y="810" />
+        <di:waypoint x="250" y="500" />
+        <di:waypoint x="334" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_1q0r3ya" bpmnElement="Flow_ManualApprovalResult">
+        <di:waypoint x="434" y="500" />
+        <di:waypoint x="575" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_1ul1a1y" bpmnElement="Flow_Rejected">
+        <di:waypoint x="600" y="525" />
+        <di:waypoint x="600" y="580" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="546" y="547" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0d6xg43" bpmnElement="Flow_Approved">
+        <di:waypoint x="600" y="475" />
+        <di:waypoint x="600" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="606" y="393" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0z762ef" bpmnElement="Flow_AdjustmentsNeeded">
+        <di:waypoint x="625" y="500" />
+        <di:waypoint x="790" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="679" y="466" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_03nd20q" bpmnElement="Flow_16xup79">
+        <di:waypoint x="650" y="620" />
+        <di:waypoint x="702" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0pdgtkl" bpmnElement="Flow_1kc8kf4">
+        <di:waypoint x="600" y="270" />
+        <di:waypoint x="600" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0x6qdle" bpmnElement="Flow_EndProcess">
+        <di:waypoint x="650" y="118" />
+        <di:waypoint x="762" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0zkhi02" bpmnElement="Flow_TimeoutNotification">
+        <di:waypoint x="380" y="558" />
+        <di:waypoint x="380" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_15jvato" bpmnElement="Flow_EndCancel">
+        <di:waypoint x="1108" y="410" />
+        <di:waypoint x="1170" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0717xil" bpmnElement="Flow_1kwcdw5">
+        <di:waypoint x="1270" y="410" />
+        <di:waypoint x="1332" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1w5kw4t_di" bpmnElement="Flow_1w5kw4t">
+        <di:waypoint x="434" y="558" />
+        <di:waypoint x="434" y="680" />
+        <di:waypoint x="1220" y="680" />
+        <di:waypoint x="1220" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lfzd2l_di" bpmnElement="Flow_1lfzd2l">
+        <di:waypoint x="908" y="540" />
+        <di:waypoint x="1220" y="540" />
+        <di:waypoint x="1220" y="450" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
